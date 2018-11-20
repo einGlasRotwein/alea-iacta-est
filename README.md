@@ -4,10 +4,14 @@
 ## toying around
 For now, I will use this tiny project to get used to the Git workflow. Adding data files, editing code and how to make stuff usable for others.
 
+## included so far
+* data of 200 real world die rolls
+* an R-Script containing
+ * basically nothing
+
 ## to be included
 * the story of the enchanted die
 * description of the "enchantment procedure"
-* data of 200 real world die rolls
 * an R-Script including
   * (a function for) randomly generated die rolls
   * an analysis of the data showing
