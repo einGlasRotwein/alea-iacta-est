@@ -7,13 +7,12 @@ For now, I will use this tiny project to get used to the Git workflow. Adding da
 ## included so far
 * data of 200 real world die rolls
 * an R-Script containing
- * basically nothing
+ * (a function for) randomly generated die rolls
 
 ## to be included
 * the story of the enchanted die
 * description of the "enchantment procedure"
 * an R-Script including
-  * (a function for) randomly generated die rolls
   * an analysis of the data showing
     * that the die can be seemingly "enchanted" in order to achieve better outcomes compared to the roll before
     * that this "improvement" is due to a regression to the mean
