@@ -1,0 +1,194 @@
+---
+title: "enchanted die"
+output: 
+  html_notebook:
+    highlight: tango
+---
+
+## prologue
+In our modern world, we have abandoned magic and myth and rely on facts and data instead. We embrace the concept of randomness and accept, for example, that we simply cannot control the outcome of a die roll - except when the die is rigged. But - what if there **was** a way to influence chance with magic? What if we simply forgot about our magical powers? What if you could win any board game by rediscovering the ancient wisdom of enchantment?\
+And what if, after you just found joy in your hidden talents surfaced, some spoilsport came along and taught you about regression to the mean?
+
+## what this is about
+I will use my magical powers to enchant a die in order to improve its "performance". In this Notebook, I will then guide you through the analysis that shows you that my magic does work. Spoiler alert: Afterwards, I will show you that in fact, it does **not** work. Sorry.\
+We will also see why we seemingly found an effect of magic in the first analysis. For toying around, I provide data of 200 real world die throws along with a function to randomly generate "enchanted die rolls".
+
+## die roll and enchantment procedure
+I rolled a perfectly normal die 200 times. My goal: achieve higher numbers. So, whenever the die's performance was weak (i.e., whenever a 1 or 2 was rolled), I encouraged it with magic, touching it with my magic wand. Yes, I really did that (just in case I really **do** have magical powers). I recorded the outcome of each die roll and if the die had been enchanted in the previous roll.
+
+### libraries
+```{r, message = FALSE}
+library(knitr)
+library(tidyverse)
+library(magrittr)
+```
+
+
+### read data
+We read in the real world data of the die rolls I provided in this repo. Die was enchanted after rolling either a 1 or 2.
+
+
+| column | description                                                      |
+| :----- | :--------------------------------------------------------------- |
+| 1      | numbers rolled from 1 to 6                                       |
+| 2      | has the die been enchanted in the previous roll? 0 = no; 1 = yes |
+Table: Description of the contents of enchanted_die.csv
+
+Note: A really helpful tool for quickly creating tables in `Rmarkdown` is the Addin [beautifyR](https://github.com/mwip/beautifyR) which you can download on GitHub.
+
+```{r}
+dd <- read.csv("enchanted_die.csv", sep = ";")
+```
+
+### difference to previous roll
+We want to know if our die has improved relative to the previous roll. That is, does the outcome increase after enchanting the die? In order to explore that, we need to calculate the difference from one roll to the next which we will store in the column `diff` in our `data.frame`.\
+Let's first create `diff` as a dummy variable in our `data.frame`. For now, it is filled with NAs.
+```{r}
+dd$diff <- NA
+```
+\
+
+This is what it looks like now:
+```{r}
+head(dd)
+```
+\
+
+Obviously, the first die roll cannot be compared to anything. So the first row in the diff column stays an NA. The second row should contain the difference of roll 2 - roll 1.\
+For example, when we first rolled a 3 and then a 4, the difference column would be 1: we improved the die roll by 1. If we first rolled a 6 and then a 3, the difference column would be -3: the die roll has decreased by 3.
+
+#### using a for loop
+We can easily achieve that by using a for loop.\
+As already mentioned, we can only calculate the difference from the second roll onwards, so this is where our loop starts. It will then continue through all the rows our `data.frame` contains, so it will be flexible in case we want to use a different dataset with a different number of die rolls.\
+Each row of `diff` as marked by `i` will now get assigned the difference between the roll in the same row `dd$roll[i]` and the roll in the previous row `dd$roll[i - 1]`.
+```{r}
+for (i in 2:nrow(dd)) {
+  dd$diff[i] <-
+    dd$roll[i] - dd$roll[i - 1]
+}
+```
+\
+
+Let's see how our `data.frame` looks now ...
+```{r}
+head(dd)
+```
+\
+
+That looks correct. However, since people sometimes are a bit sceptical regarding the use of for loops within the `R` community, let's explore a different way to achieve the same outome.
+
+#### using lag
+We can create a "lagged" column that contains the die rolls - shifted one row down, i.e. lagging one row behind the original column. Then, we can calculate the difference between the two columns without using a loop.\
+We quickly discard the `diff` column to start from scratch.
+```{r}
+dd$diff <- NULL
+```
+\
+
+This is how we create a lagged column (here called `roll_lag`): `lag` takes a vector as argument and per default, it lags each element by one. Which is exactly what we need in our simple case.
+```{r}
+dd$roll_lag <- 
+  lag(dd$roll)
+```
+\
+
+Let's take a look at out `data.frame`. To make it easier to compare the two columns of interest, I reordered them using the `tidyverse`. I directly overwrite `dd` by using `%<>%` from the `magrittr` package.
+```{r}
+dd %<>% 
+  select(roll, roll_lag, magic_before)
+
+head(dd)
+```
+\
+
+Awesome. Now we calculate the difference between `roll` (the current roll) and `roll_lag` (the previous roll). As compared to the for loop, it makes it a bit easier to understand what is going on. We can either use `base R` to attach the new `diff` column ...
+```{r}
+dd$diff <- 
+  dd$roll - dd$roll_lag
+```
+\
+
+... or use the `tidyverse` and `magrittr` to achieve the very same thing:
+```{r}
+dd %<>%
+  mutate(diff = roll - roll_lag)
+```
+\
+
+Either way, `dd` now looks like this:
+```{r}
+head(dd)
+```
+\
+
+**To be inserted:** data visualisation and analysis, regression to the mean
+
+### randomly generated die rolls
+Everything I just showed you might still just have happened because I used real die rolls. After all, the die **could** have been rigged. Or I **could** possess some magical talents. I can show you, however, that all of the above still holds when we use a completely random data set.\
+We generate some random die rolls and just assume that enchantment took place after specific numers (e.g. 1 and 2, like in our real world example). That means, we include a hypothetical `magic_before` column like in the real world example, even though no magic has ever occured. Yet, we still find an effect of magic if we assume the same rules as we did in the real world example.\
+That is, when we enchant the die after rolling low numbers, we will get an "improvement" via magic. If we enchant it after rolling high numbers, we will see the die getting "worse" - much like in a curse. You can toy around with the effect by using this function I created. It will generate a set of random die rolls with enchantment.\
+Most importantly, it is a really flexible function: You can **specify which numbers can possibly be rolled**, so our example does not have to be limited to a six-sided die. You can very well simulate a coin flip by e.g. providing 1 and 2 as possible outcomes.\
+And of course, you can also **specify which numbers you want to enchant**. The only limitation is that these numbers are included in the set of possible outcomes, obviously. Enchanting after a 3 or a 2 have been rolled will work for an ordinary six-sided die, but not for a coin flip (except when you have labelled the coin outcomes with 3 and 4). Accordingly, trying to enchant after a 42 for a die with numbers from 1 - 12 will give you an error message.\
+Try it out - you will receive an enchanting message when generating a dataset has been successful!
+
+Here is the quick, uncommented code for the function - I will explain it step by step below if you want to know more.
+
+### function for enchanted die rolls
+result: `data.frame` with two columns - output silent in order to prevent huge `data.frame` from being printed to the console
+
+| column         | description                                                                                                                |
+| :------------- | :------------------------------------------------------------------------------------------------------------------------- |
+| `rolls`        | die roll outcomes randomly sampled from numbers specified in `die_outcomes`                                                |
+| `magic_before` | has the die been enchanted in the previous roll? die is enchanted after rolling the number(s) specified in `magic_numbers` |
+Table: Description of the outcome of the `enchant.die` function.
+
+| argument        | description                                                                                                                                                                                                               |
+| :-------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `nrolls`        | number of rolls                                                                                                                                                                                                           |
+| `magic_numbers` | specify die outcomes after which you want to enchant your die; can be either a single number or a vector of several ones; default = c(1, 2) as in the real world example                                                  |
+| `die_outcomes`  | specify (a vector of) numbers from which die outcomes are sampled; uniform when each outcome is included only once - to weigh outcomes differently, include the same outcome multiple times; default: classical die (1:6) |
+Table: Arguments of the `enchant.die` function.
+
+```{r}
+enchant.die <- function(nrolls, magic_numbers = c(1, 2), die_outcomes = 1:6) {
+  error <- FALSE
+  
+  if (sum(!magic_numbers %in% die_outcomes) > 0) {
+    print("Woah there! You want to enchant at least one die outcome that your die cannot possibly roll! Per default, the die rolls 1:6. Specify any other outcomes via the argument die_outcomes.")
+    error <- TRUE
+  }
+  
+  dd <- data.frame(rolls = sample(die_outcomes, nrolls, replace = TRUE), 
+                   magic_before = rep(2, nrolls))
+  
+  dd$magic_before[1] <- 0
+  
+  for (i in 1:(nrolls - 1)) {
+    ifelse(dd$rolls[i] %in% magic_numbers == TRUE, 
+           dd$magic_before[i + 1] <- 1, dd$magic_before[i + 1] <- 0)
+  }
+  
+  magic_message <- c("Mischief managed.", "Magical!", "Alea iacta est.", "You're a wizard!",
+                     "Magic is in the air.", "Did you just feel that?", "Enchanting!",
+                     "Thank you for choosing Enchanted Dies!", "I'm slightly bewichted.",
+                     "With great power comes great responsibilty.", "That's a lot of die rolls",
+                     "6 is my lucky number!", "Charming!", "I'm under your spell!")
+  
+  if (error == FALSE) {
+  print(sample(magic_message, 1))
+  }
+  
+  invisible(dd)
+}
+```
+
+## Examples
+200 rolls with an ordinary, six-sided die. Enchantment: default - after rolling a 1 or 2.
+```{r}
+dd <- enchant.die(200)
+
+head(dd)
+```
+\
+
+**To be included:** Explain function. (And maybe improve it.)
