@@ -20,3 +20,5 @@
   * that the die can be seemingly "enchanted" in order to achieve better outcomes compared to the roll before
   * that this "improvement" is due to a regression to the mean
   * that the distribution of the die rolls is still uniform
+* a fancier way of presenting the thing
+  * several pages are a must - this is getting way too long
