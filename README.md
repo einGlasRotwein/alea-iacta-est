@@ -20,5 +20,13 @@
   * that the die can be seemingly "enchanted" in order to achieve better outcomes compared to the roll before
   * that this "improvement" is due to a regression to the mean
   * that the distribution of the die rolls is still uniform
-* a fancier way of presenting the thing
-  * branch gitbook, current status: wtf, but getting there
+  
+## current issues
+* a fancier way of presenting the thing: branch gitbook
+    * current status: wtf, but getting there
+    * what to do with all the files? 
+        * Which do I need? 
+        * Where to store? 
+        * More reasonanle way of organising everything?
+    * get the whole thing online properly?
+    * I want my tango syntax highlighting again
