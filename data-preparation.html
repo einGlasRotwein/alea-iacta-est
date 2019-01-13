@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html >
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>3 data preparation | enchanted die</title>
+  <meta name="description" content="3 data preparation | enchanted die">
+  <meta name="generator" content="bookdown  and GitBook 2.6.7">
+
+  <meta property="og:title" content="3 data preparation | enchanted die" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="3 data preparation | enchanted die" />
+  
+  
+  
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  
+  
+<link rel="prev" href="what-this-is-about.html">
+<link rel="next" href="data-analysis.html">
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="prologue.html"><a href="prologue.html"><i class="fa fa-check"></i><b>1</b> prologue</a></li>
+<li class="chapter" data-level="2" data-path="what-this-is-about.html"><a href="what-this-is-about.html"><i class="fa fa-check"></i><b>2</b> what this is about</a><ul>
+<li class="chapter" data-level="2.1" data-path="what-this-is-about.html"><a href="what-this-is-about.html#die-roll-and-enchantment-procedure"><i class="fa fa-check"></i><b>2.1</b> die roll and enchantment procedure</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="data-preparation.html"><a href="data-preparation.html"><i class="fa fa-check"></i><b>3</b> data preparation</a><ul>
+<li class="chapter" data-level="3.1" data-path="data-preparation.html"><a href="data-preparation.html#libraries"><i class="fa fa-check"></i><b>3.1</b> libraries</a></li>
+<li class="chapter" data-level="3.2" data-path="data-preparation.html"><a href="data-preparation.html#read-data"><i class="fa fa-check"></i><b>3.2</b> read data</a></li>
+<li class="chapter" data-level="3.3" data-path="data-preparation.html"><a href="data-preparation.html#difference-to-previous-roll"><i class="fa fa-check"></i><b>3.3</b> difference to previous roll</a><ul>
+<li class="chapter" data-level="3.3.1" data-path="data-preparation.html"><a href="data-preparation.html#using-a-for-loop"><i class="fa fa-check"></i><b>3.3.1</b> using a for loop</a></li>
+<li class="chapter" data-level="3.3.2" data-path="data-preparation.html"><a href="data-preparation.html#using-lag"><i class="fa fa-check"></i><b>3.3.2</b> using lag</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="data-analysis.html"><a href="data-analysis.html"><i class="fa fa-check"></i><b>4</b> data analysis</a><ul>
+<li class="chapter" data-level="4.1" data-path="data-analysis.html"><a href="data-analysis.html#die-improvement-as-a-function-of-magic"><i class="fa fa-check"></i><b>4.1</b> die improvement as a function of magic</a><ul>
+<li class="chapter" data-level="4.1.1" data-path="data-analysis.html"><a href="data-analysis.html#prepare-a-dataframe-for-a-plot"><i class="fa fa-check"></i><b>4.1.1</b> prepare a dataframe for a plot</a></li>
+<li class="chapter" data-level="4.1.2" data-path="data-analysis.html"><a href="data-analysis.html#plot-it"><i class="fa fa-check"></i><b>4.1.2</b> plot it</a></li>
+<li class="chapter" data-level="4.1.3" data-path="data-analysis.html"><a href="data-analysis.html#is-there-a-tidy-way"><i class="fa fa-check"></i><b>4.1.3</b> is there a tidy way?</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="randomly-generated-die-rolls.html"><a href="randomly-generated-die-rolls.html"><i class="fa fa-check"></i><b>5</b> randomly generated die rolls</a><ul>
+<li class="chapter" data-level="5.1" data-path="randomly-generated-die-rolls.html"><a href="randomly-generated-die-rolls.html#function-for-enchanted-die-rolls"><i class="fa fa-check"></i><b>5.1</b> function for enchanted die rolls</a></li>
+<li class="chapter" data-level="5.2" data-path="randomly-generated-die-rolls.html"><a href="randomly-generated-die-rolls.html#examples"><i class="fa fa-check"></i><b>5.2</b> Examples</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">enchanted die</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="data-preparation" class="section level1">
+<h1><span class="header-section-number">3</span> data preparation</h1>
+<div id="libraries" class="section level2">
+<h2><span class="header-section-number">3.1</span> libraries</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(knitr)
+<span class="kw">library</span>(tidyverse)
+<span class="kw">library</span>(magrittr)</code></pre></div>
+</div>
+<div id="read-data" class="section level2">
+<h2><span class="header-section-number">3.2</span> read data</h2>
+<p>We read in the real world data of the die rolls I provided in this repo. Die was enchanted after rolling either a 1 or 2.</p>
+<table>
+<caption>Description of the contents of enchanted_die.csv</caption>
+<thead>
+<tr class="header">
+<th align="left">column</th>
+<th align="left">description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">numbers rolled from 1 to 6</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">has the die been enchanted in the previous roll? 0 = no; 1 = yes</td>
+</tr>
+</tbody>
+</table>
+<p>Note: A really helpful tool for quickly creating tables in <code>Rmarkdown</code> is the Addin <a href="https://github.com/mwip/beautifyR">beautifyR</a> which you can download on GitHub.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dd &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;enchanted_die.csv&quot;</span>, <span class="dt">sep =</span> <span class="st">&quot;;&quot;</span>)</code></pre></div>
+</div>
+<div id="difference-to-previous-roll" class="section level2">
+<h2><span class="header-section-number">3.3</span> difference to previous roll</h2>
+<p>We want to know if our die has improved relative to the previous roll. That is, does the outcome increase after enchanting the die? In order to explore that, we need to calculate the difference from one roll to the next which we will store in the column <code>diff</code> in our <code>data.frame</code>.<br />
+Let’s first create <code>diff</code> as a dummy variable in our <code>data.frame</code>. For now, it is filled with <code>NA</code>s.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dd<span class="op">$</span>diff &lt;-<span class="st"> </span><span class="ot">NA</span></code></pre></div>
+<p><br />
+This is what it looks like now:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(dd)</code></pre></div>
+<pre><code>##   roll magic_before diff
+## 1    3            0   NA
+## 2    2            0   NA
+## 3    5            1   NA
+## 4    6            0   NA
+## 5    1            0   NA
+## 6    4            1   NA</code></pre>
+<p><br />
+Obviously, the first die roll cannot be compared to anything. So the first row in the diff column stays an <code>NA</code>. The second row should contain the difference of roll 2 - roll 1.<br />
+For example, when we first rolled a 3 and then a 4, the difference column would be 1: we improved the die roll by 1. If we first rolled a 6 and then a 3, the difference column would be -3: the die roll has decreased by 3.</p>
+<div id="using-a-for-loop" class="section level3">
+<h3><span class="header-section-number">3.3.1</span> using a for loop</h3>
+<p>We can easily achieve that by using a for loop.<br />
+As already mentioned, we can only calculate the difference from the second roll onwards, so this is where our loop starts. It will then continue through all the rows our <code>data.frame</code> contains, so it will be flexible in case we want to use a different dataset with a different number of die rolls.<br />
+Each row of <code>diff</code> as marked by <code>i</code> will now get assigned the difference between the roll in the same row <code>dd$roll[i]</code> and the roll in the previous row <code>dd$roll[i - 1]</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">2</span><span class="op">:</span><span class="kw">nrow</span>(dd)) {
+  dd<span class="op">$</span>diff[i] &lt;-
+<span class="st">    </span>dd<span class="op">$</span>roll[i] <span class="op">-</span><span class="st"> </span>dd<span class="op">$</span>roll[i <span class="op">-</span><span class="st"> </span><span class="dv">1</span>]
+}</code></pre></div>
+<p><br />
+Let’s see how our <code>data.frame</code> looks now …</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(dd)</code></pre></div>
+<pre><code>##   roll magic_before diff
+## 1    3            0   NA
+## 2    2            0   -1
+## 3    5            1    3
+## 4    6            0    1
+## 5    1            0   -5
+## 6    4            1    3</code></pre>
+<p><br />
+That looks correct. However, since people sometimes are a bit sceptical regarding the use of for loops within the <code>R</code> community, let’s explore a different way to achieve the same outome.</p>
+</div>
+<div id="using-lag" class="section level3">
+<h3><span class="header-section-number">3.3.2</span> using lag</h3>
+<p>We can create a “lagged” column that contains the die rolls - shifted one row down, i.e. lagging one row behind the original column. Then, we can calculate the difference between the two columns without using a loop.<br />
+We quickly discard the <code>diff</code> column to start from scratch.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dd<span class="op">$</span>diff &lt;-<span class="st"> </span><span class="ot">NULL</span></code></pre></div>
+<p><br />
+This is how we create a lagged column (here called <code>roll_lag</code>): <code>lag</code> takes a vector as argument and per default, it lags each element by one. Which is exactly what we need in our simple case.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dd<span class="op">$</span>roll_lag &lt;-<span class="st"> </span>
+<span class="st">  </span><span class="kw">lag</span>(dd<span class="op">$</span>roll)</code></pre></div>
+<p><br />
+Let’s take a look at out <code>data.frame</code>. To make it easier to compare the two columns of interest, I reordered them using the <code>tidyverse</code>. I directly overwrite <code>dd</code> by using <code>%&lt;&gt;%</code> from the <code>magrittr</code> package.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dd <span class="op">%&lt;&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(roll, roll_lag, magic_before)
+
+<span class="kw">head</span>(dd)</code></pre></div>
+<pre><code>##   roll roll_lag magic_before
+## 1    3       NA            0
+## 2    2        3            0
+## 3    5        2            1
+## 4    6        5            0
+## 5    1        6            0
+## 6    4        1            1</code></pre>
+<p><br />
+Awesome. Now we calculate the difference between <code>roll</code> (the current roll) and <code>roll_lag</code> (the previous roll). As compared to the for loop, it makes it a bit easier to understand what is going on. We can either use base <code>R</code> to attach the new <code>diff</code> column …</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dd<span class="op">$</span>diff &lt;-<span class="st"> </span>
+<span class="st">  </span>dd<span class="op">$</span>roll <span class="op">-</span><span class="st"> </span>dd<span class="op">$</span>roll_lag</code></pre></div>
+<p><br />
+… or use the <code>tidyverse</code> and <code>magrittr</code> to achieve the very same thing:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dd <span class="op">%&lt;&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">diff =</span> roll <span class="op">-</span><span class="st"> </span>roll_lag)</code></pre></div>
+<p><br />
+Either way, <code>dd</code> now looks like this:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(dd)</code></pre></div>
+<pre><code>##   roll roll_lag magic_before diff
+## 1    3       NA            0   NA
+## 2    2        3            0   -1
+## 3    5        2            1    3
+## 4    6        5            0    1
+## 5    1        6            0   -5
+## 6    4        1            1    3</code></pre>
+</div>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="what-this-is-about.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="data-analysis.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"google": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"all": ["facebook", "google", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": null,
+"history": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": 3,
+"scroll_highlight": true
+},
+"toolbar": {
+"position": "fixed"
+},
+"search": false
+});
+});
+</script>
+
+</body>
+
+</html>
