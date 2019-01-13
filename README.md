@@ -6,10 +6,11 @@
 * an .Rmd notebook (source and .html) containing
   * a description of the project and how the enchantment worked
   * reading in and preparing the real world data for analysis
+  * visualisation of the data showing that I can enchant a die
   * a function for randomly generating "enchanted" die rolls
 
 ## featuring
-* some simple usages of `base R` and the `tidyverse`
+* some simple usages of `base R` and the `tidyverse`, including plots, of course
 * (to be included) basic inferential statistics
 * (to be included) using self-written functions in `R`
 * (to be included) explaining regression to the mean
