@@ -3,11 +3,15 @@ title: "enchanted die"
 output: 
   html_notebook:
     highlight: tango
+    theme: united
+    toc: yes
 ---
 
 ## prologue
 In our modern world, we have abandoned magic and myth and rely on facts and data instead. We embrace the concept of randomness and accept, for example, that we simply cannot control the outcome of a die roll - except when the die is rigged. But - what if there **was** a way to influence chance with magic? What if we simply forgot about our magical powers? What if you could win any board game by rediscovering the ancient wisdom of enchantment?\
 And what if, after you just found joy in your hidden talents surfaced, some spoilsport came along and taught you about regression to the mean?
+
+***
 
 ## what this is about
 I will use my magical powers to enchant a die in order to improve its "performance". In this Notebook, I will then guide you through the analysis that shows you that my magic does work. Spoiler alert: Afterwards, I will show you that in fact, it does **not** work. Sorry.\
