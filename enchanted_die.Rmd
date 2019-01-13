@@ -16,6 +16,7 @@ We will also see why we seemingly found an effect of magic in the first analysis
 ## die roll and enchantment procedure
 I rolled a perfectly normal die 200 times. My goal: achieve higher numbers. So, whenever the die's performance was weak (i.e., whenever a 1 or 2 was rolled), I encouraged it with magic, touching it with my magic wand. Yes, I really did that (just in case I really **do** have magical powers). I recorded the outcome of each die roll and if the die had been enchanted in the previous roll.
 
+## let's get things into R
 ### libraries
 ```{r, message = FALSE}
 library(knitr)
@@ -42,7 +43,7 @@ dd <- read.csv("enchanted_die.csv", sep = ";")
 
 ### difference to previous roll
 We want to know if our die has improved relative to the previous roll. That is, does the outcome increase after enchanting the die? In order to explore that, we need to calculate the difference from one roll to the next which we will store in the column `diff` in our `data.frame`.\
-Let's first create `diff` as a dummy variable in our `data.frame`. For now, it is filled with NAs.
+Let's first create `diff` as a dummy variable in our `data.frame`. For now, it is filled with `NA`s.
 ```{r}
 dd$diff <- NA
 ```
@@ -54,7 +55,7 @@ head(dd)
 ```
 \
 
-Obviously, the first die roll cannot be compared to anything. So the first row in the diff column stays an NA. The second row should contain the difference of roll 2 - roll 1.\
+Obviously, the first die roll cannot be compared to anything. So the first row in the diff column stays an `NA`. The second row should contain the difference of roll 2 - roll 1.\
 For example, when we first rolled a 3 and then a 4, the difference column would be 1: we improved the die roll by 1. If we first rolled a 6 and then a 3, the difference column would be -3: the die roll has decreased by 3.
 
 #### using a for loop
@@ -101,7 +102,7 @@ head(dd)
 ```
 \
 
-Awesome. Now we calculate the difference between `roll` (the current roll) and `roll_lag` (the previous roll). As compared to the for loop, it makes it a bit easier to understand what is going on. We can either use `base R` to attach the new `diff` column ...
+Awesome. Now we calculate the difference between `roll` (the current roll) and `roll_lag` (the previous roll). As compared to the for loop, it makes it a bit easier to understand what is going on. We can either use base `R` to attach the new `diff` column ...
 ```{r}
 dd$diff <- 
   dd$roll - dd$roll_lag
@@ -119,9 +120,114 @@ Either way, `dd` now looks like this:
 ```{r}
 head(dd)
 ```
+
+## data analysis
+### die improvement as a function of magic
+
+Let's first get an overview. I would like to see a summary of the difference between successive rolls - depending on if magic has been used or not. I ask for a summary of all the rows in `diff` where no magic happened before (`magic_before == 0`) and for a separate summary of all the rows where the die was enchanted (`magic_before == 1`).
+```{r}
+summary(dd$diff[dd$magic_before == 0])
+summary(dd$diff[dd$magic_before == 1])
+```
 \
 
-**To be inserted:** data visualisation and analysis, regression to the mean
+Remember: That `NA` is produced because the first row of `diff` does not contain a value because there is no previous roll to compare it to.\
+But more importantly: Holy cow! Looks like there **is** an effect of magic! Look at the median of each group! Not very intuitive when presented like that, isn't it? Let's rather visualise the data.
+
+#### prepare a dataframe for a plot
+I would like to create a bar plot comparing the difference with magic vs. without magic - along with some error bars representing the standard error. Now, there are several ways to achieve this. Base `R` itself does not have a function for the standard error. However, it has one for the standard deviation, which is part of the formula to calculate the standard error.\
+We want to prepare a `data.frame` that we can plot later. And we can produce the column containing the standard error like this:
+
+```{r}
+se <- 
+  tapply(dd$diff, dd$magic_before, sd, na.rm = TRUE)/
+  c(sqrt(length(dd$diff[dd$magic_before == 0])), 
+    sqrt(length(dd$diff[dd$magic_before == 1])))
+```
+\
+
+Okay, this looks a bit wild. We can understand what's going on by running each piece of code separately. First, `tapply` gives us the standard deviation `sd` of the column `diff` - separately for each group of `magic_before`. Here, the `sd` for "no magic" is about 2.12 and for "magic" it is about 1.83.\
+Note that we need to set `na.rm = TRUE` so `R` will ignore the missing value. Otherwise, we'll end up with `NA` as result.
+
+```{r}
+tapply(dd$diff, dd$magic_before, sd, na.rm = TRUE)
+```
+\
+
+We need to divide the standard deviation by the square root of the sample size. This is what the second part of the code does: It calculates the square root of the size of each group (magic or not). That is, right at the core of all the brackets in the first line, we select the rows containing the difference (`dd$diff`) for the rolls where no magic happened (`[dd$magic_before == 0]`). Then we wrap that in `length` to get the number of elements (i.e. the number of rolls where no magic happened before). And lastly, we calculate the `sqrt` of the whole thing. In that case, it's simply the square root of 141. We have much more rolls where no magic happened.
+
+```{r}
+c(sqrt(length(dd$diff[dd$magic_before == 0])), 
+  sqrt(length(dd$diff[dd$magic_before == 1])))
+```
+\
+
+In the whole thing you saw above, we divided the vector containing the `sd` by the vector containing the `sqrt` of the sample size. So, `se` now looks like this:
+
+```{r}
+se
+```
+\
+
+Right. What does the `data.frame` we want to plot need? One column, `magic`, containing the condition (with or without - I used the spaces as a quick and dirty solution to have more space between the legend icons and the legend text in the plot). A second one, `diff`, containing the mean difference for each group - again, we use `tapply` to calculate that. Don't forget `na.rm`! And then, of course, a column containing the standard error - `se` which gets assigned the values of `se` that we calculated before. I wrapped the whole thing in parentheses so the outcome is printed even though it usually isn't when assigning something to a variable.
+```{r}
+(plot_data <- 
+  data.frame(magic = c(" without magic", " with magic"),
+             diff = tapply(dd$diff, dd$magic_before, mean, na.rm = TRUE),
+             se = se))
+```
+
+#### plot it
+Cool. After all this work, let's finally reward ourselves with a plot!
+```{r}
+ggplot(plot_data, aes(y = diff, x = magic, fill = magic)) +
+  geom_col(colour = "black", alpha = .6) +
+  scale_fill_manual(values = c("#9e0000", "#2d2d2d")) +
+  geom_errorbar(aes(ymin = diff - se, ymax = diff + se), width = .1) + 
+  labs(title= "mean difference between successive rolls", y = "difference") +
+  theme(plot.title = element_text(size = 16, hjust = .5),
+        axis.title.y = element_text(size = 14), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 12), axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.text = element_text(size = 12), legend.title = element_blank())
+```
+\
+
+Again, this looks a bit wild because I customised so many things about this plot. `ggplot2` can be quite tempting by providing so many options. In general, I created a plot with `ggplot` using `plot_data` as data source. I picked `diff` to be shown on the y-axis and `magic` on the x-axis. That would have been enough, but I also wanted to have different colours for each group, so I picket `fill = magic`.\
+I wanted a bar plot, so I used `geom_col` for that (by intuition, you might want to use `geom_bar`, but then you need to add `stat = "identity"` as per default, `geom_bar` will want to use the count of each category on the y-axis). For the bars, I want a black outline and I want them to be slightly transparent (`alpha = .6`). Because I also want to manually pick the colours of the two bars, I specify them with `scale_fill_manual`.\
+We also wanted to add standard errors. I can do that with `geom_errorbar`. For each bar, the minimum of the errorbar should be the mean (i.e. the height of the bar) minus the standard error. While the maximum of the error bar is the mean plus the standard error. I also pick a width of the vertical lines at the end of the bars. Next, `labs` adds some labels: a title for the plot and one for the y-axis (because otherwise, it just would be called `diff`). In `theme`, I get rid of the x-axis title because it is pretty redundant given the legend and the x-axis title.\
+The rest is mainly resizing all the text because per default, it would be ridiculously small in thos Notebook.
+
+#### is there a tidy way?
+That was a bit of a struggle. However, `ggplot2` is a native of the `tidyverse`, so we should look at a tidy way to create this graph. A really convenient thing is that `ggplot2`, in fact, comes with a function for the standard error. And for the mean, by the way. No need to manually create a `data.frame` before - but this was the first way I learned it and I think it makes you think a bit more about what you actually want to plot.
+
+```{r}
+dd %>% 
+  na.omit() %>% 
+  ggplot(aes(y = diff, x = magic_before, fill = factor(magic_before))) +
+  stat_summary(fun.y = mean, geom = "col", 
+               colour = "black", alpha = .6) +
+  stat_summary(fun.data = mean_se, geom = "errorbar", 
+               width = .1) +
+  scale_fill_manual(values = c("#2d2d2d", "#9e0000"), 
+                    labels = c(" without magic", " with magic")) +
+  labs(title= "mean difference between successive rolls", y = "difference") +
+  theme(plot.title = element_text(size = 16, hjust = .5),
+        axis.title.y = element_text(size = 14), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 12), axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.text = element_text(size = 12), legend.title = element_blank())
+```
+\
+
+Again, maybe a bit wild, but slightly more concise. The basic structure, however, is the same. And all the customising stuff that I have added. The bars are now ordered the other way around, but let's ignore that.\
+The first difference is that now, I pass `dd` to `ggplot` using a pipe (`%>%`). I do not need to do that - I could have included `dd` as an argument within `ggplot`. But that way, I can get rid of the `NA`s along the way using `na.omit`. As we want to calculate the mean later, `R` would complain about those.\
+Because we now use `dd` directly, we provide its variable names - instead of the ones of the plot `data.fame` we used before. So for example, it's now `x = magic_before`. For the fill, we need to convert `magic_before` into a factor first (we could have done that before because that's what it truly is anyway).\
+Now it gets funny. `geom`s and `stat`s in `ggplot2` are interchangable and correspond to each other. You can provide a stat argument in a `geom` and a geom argument in a `stat`. Every `geom` has a default `stat` to go with - and the other way around. But we can take advantage of the fact that we can also use the `stat`s and `geom`s we want. So, `stat_summary` allows us to specify some summary functions for our data. We want the mean of the y-value (`diff`) for or bars (and we pick those with `geom = col`). In a second `stat_summary`, we use `mean_se` to calculate the standard error directly. No more tedious work like before!\
+Bottom line: `stat_summary` with `geom = col` replaces the previous `geom_col`. `stat_summary` with `geom = errorbar` replaces the previous `geom_errorbar`. Oh, and a minor thing: I also needed to provide the legend labels manually. Taken from the data, it would have been 0 and 1. Again, I could have prevented that by converting the whole column to a factor beforehand.\
+
+
+**To be inserted:** data analysis, more visualisation and regression to the mean
 
 ### randomly generated die rolls
 Everything I just showed you might still just have happened because I used real die rolls. After all, the die **could** have been rigged. Or I **could** possess some magical talents. I can show you, however, that all of the above still holds when we use a completely random data set.\
