@@ -261,11 +261,15 @@ Table: Arguments of the `enchant.die` function.
 
 ```{r}
 enchant.die <- function(nrolls, magic_numbers = c(1, 2), die_outcomes = 1:6) {
-  error <- FALSE
+  
+  magic_message <- c("Mischief managed.", "Magical!", "Alea iacta est.", "You're a wizard!",
+                     "Magic is in the air.", "Did you just feel that?", "Enchanting!",
+                     "Thank you for choosing Enchanted Dies!", "I'm slightly bewichted.",
+                     "With great power comes great responsibilty.", "That's a lot of die rolls",
+                     "6 is my lucky number!", "Charming!", "I'm under your spell!")
   
   if (sum(!magic_numbers %in% die_outcomes) > 0) {
-    print("Woah there! You want to enchant at least one die outcome that your die cannot possibly roll! Per default, the die rolls 1:6. Specify any other outcomes via the argument die_outcomes.")
-    error <- TRUE
+    stop("Woah there! You want to enchant at least one die outcome that your die cannot possibly roll! Per default, the die rolls 1:6. Specify any other outcomes via the argument die_outcomes.")
   }
   
   dd <- data.frame(rolls = sample(die_outcomes, nrolls, replace = TRUE), 
@@ -278,15 +282,7 @@ enchant.die <- function(nrolls, magic_numbers = c(1, 2), die_outcomes = 1:6) {
            dd$magic_before[i + 1] <- 1, dd$magic_before[i + 1] <- 0)
   }
   
-  magic_message <- c("Mischief managed.", "Magical!", "Alea iacta est.", "You're a wizard!",
-                     "Magic is in the air.", "Did you just feel that?", "Enchanting!",
-                     "Thank you for choosing Enchanted Dies!", "I'm slightly bewichted.",
-                     "With great power comes great responsibilty.", "That's a lot of die rolls",
-                     "6 is my lucky number!", "Charming!", "I'm under your spell!")
-  
-  if (error == FALSE) {
   print(sample(magic_message, 1))
-  }
   
   invisible(dd)
 }
