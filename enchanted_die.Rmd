@@ -1,300 +1,272 @@
 ---
-title: "enchanted die"
+title: "Der verzauberte Würfel"
 output: 
-  html_notebook:
+  html_document:
     highlight: tango
-    theme: united
-    toc: yes
 ---
 
-## prologue
-In our modern world, we have abandoned magic and myth and rely on facts and data instead. We embrace the concept of randomness and accept, for example, that we simply cannot control the outcome of a die roll - except when the die is rigged. But - what if there **was** a way to influence chance with magic? What if we simply forgot about our magical powers? What if you could win any board game by rediscovering the ancient wisdom of enchantment?\
-And what if, after you just found joy in your hidden talents surfaced, some spoilsport came along and taught you about regression to the mean?
+## Prolog
+
+In unserer modernen Welt haben wir Magie und Mythen hinter uns gelassen und bauen stattdessen auf Fakten und Daten.
+Wir haben Frieden mit dem Zufall geschlossen und akzeptieren zum Beispiel, dass wir einen Würfel nicht beeinflussen können - es sei denn, er ist gezinkt.
+Aber was, wenn es einen Weg gäbe, den Zufall durch Magie zu beeinflussen?
+Wenn wir unsere magischen Kräfte schlichtweg vergessen hätten?
+Was, wenn wir jedes Brettspiel gewinnen könnten, wenn wir nur unsere schlummernden magischen Weisheiten wiederentdecken?
+
+Und was, wenn gerade deine magischen Fähigkeiten ans Licht gekommen wären, und dann ein Klugscheißer vorbei kommt und dir was von Regression zur Mitte erzählt?
 
 ***
 
-## what this is about
-I will use my magical powers to enchant a die in order to improve its "performance". In this Notebook, I will then guide you through the analysis that shows you that my magic does work. Spoiler alert: Afterwards, I will show you that in fact, it does **not** work. Sorry.\
-We will also see why we seemingly found an effect of magic in the first analysis. For toying around, I provide data of 200 real world die throws along with a function to randomly generate "enchanted die rolls".
+## Worum es hier geht
 
-## die roll and enchantment procedure
-I rolled a perfectly normal die 200 times. My goal: achieve higher numbers. So, whenever the die's performance was weak (i.e., whenever a 1 or 2 was rolled), I encouraged it with magic, touching it with my magic wand. Yes, I really did that (just in case I really **do** have magical powers). I recorded the outcome of each die roll and if the die had been enchanted in the previous roll.
+Ich werde mit meinen "magischen Kräfte" einen Würfel verzaubern, um seine "Performance" zu verbessern.
+Dabei zeige ich euch den `R`-Code, den ich verwende, um meine magischen Würfeldaten zu analysieren - und um bei Bedarf welche zu generieren.
+Spoiler-Alarm: Letztendlich werde ich euch zeigen, dass Magie in Wahrheit doch nicht funktioniert.
+Sorry.
 
-## let's get things into R
-### libraries
-```{r, message = FALSE}
-library(knitr)
+## Daten einlesen und aufbereiten
+
+Ich habe tatsächlich allen Ernstes 200 mal einen Würfel gewürfelt, und immer dann, wenn er eine 1 oder eine 2 gezeigt hat, habe ich ihn "verzaubert", um ihm ein bisschen auf die Sprünge zu helfen.
+Glaubt ihr nicht?
+[In diesem Video](https://www.youtube.com/watch?v=LB_X3jXZC8I) gibt es den Beweis.
+Der Datensatz ist in diesem Repo hochgeladen, wir können ihn also einfach einlesen.
+
+```{r message = FALSE}
+# Verwendete packages
+# Datenverarbeitung
 library(tidyverse)
-library(magrittr)
-```
+library(effsize)
+library(prmisc)
+# Generierung der html Datei
+library(kableExtra)
 
-
-### read data
-We read in the real world data of the die rolls I provided in this repo. Die was enchanted after rolling either a 1 or 2.
-
-
-| column | description                                                      |
-| :----- | :--------------------------------------------------------------- |
-| 1      | numbers rolled from 1 to 6                                       |
-| 2      | has the die been enchanted in the previous roll? 0 = no; 1 = yes |
-Table: Description of the contents of enchanted_die.csv
-
-Note: A really helpful tool for quickly creating tables in `Rmarkdown` is the Addin [beautifyR](https://github.com/mwip/beautifyR) which you can download on GitHub.
-
-```{r}
-dd <- read.csv("enchanted_die.csv", sep = ";")
-```
-
-### difference to previous roll
-We want to know if our die has improved relative to the previous roll. That is, does the outcome increase after enchanting the die? In order to explore that, we need to calculate the difference from one roll to the next which we will store in the column `diff` in our `data.frame`.\
-Let's first create `diff` as a dummy variable in our `data.frame`. For now, it is filled with `NA`s.
-```{r}
-dd$diff <- NA
-```
-\
-
-This is what it looks like now:
-```{r}
-head(dd)
-```
-\
-
-Obviously, the first die roll cannot be compared to anything. So the first row in the diff column stays an `NA`. The second row should contain the difference of roll 2 - roll 1.\
-For example, when we first rolled a 3 and then a 4, the difference column would be 1: we improved the die roll by 1. If we first rolled a 6 and then a 3, the difference column would be -3: the die roll has decreased by 3.
-
-#### using a for loop
-We can easily achieve that by using a for loop.\
-As already mentioned, we can only calculate the difference from the second roll onwards, so this is where our loop starts. It will then continue through all the rows our `data.frame` contains, so it will be flexible in case we want to use a different dataset with a different number of die rolls.\
-Each row of `diff` as marked by `i` will now get assigned the difference between the roll in the same row `dd$roll[i]` and the roll in the previous row `dd$roll[i - 1]`.
-```{r}
-for (i in 2:nrow(dd)) {
-  dd$diff[i] <-
-    dd$roll[i] - dd$roll[i - 1]
-}
-```
-\
-
-Let's see how our `data.frame` looks now ...
-```{r}
-head(dd)
-```
-\
-
-That looks correct. However, since people sometimes are a bit sceptical regarding the use of for loops within the `R` community, let's explore a different way to achieve the same outome.
-
-#### using lag
-We can create a "lagged" column that contains the die rolls - shifted one row down, i.e. lagging one row behind the original column. Then, we can calculate the difference between the two columns without using a loop.\
-We quickly discard the `diff` column to start from scratch.
-```{r}
-dd$diff <- NULL
-```
-\
-
-This is how we create a lagged column (here called `roll_lag`): `lag` takes a vector as argument and per default, it lags each element by one. Which is exactly what we need in our simple case.
-```{r}
-dd$roll_lag <- 
-  lag(dd$roll)
-```
-\
-
-Let's take a look at out `data.frame`. To make it easier to compare the two columns of interest, I reordered them using the `tidyverse`. I directly overwrite `dd` by using `%<>%` from the `magrittr` package.
-```{r}
-dd %<>% 
-  select(roll, roll_lag, magic_before)
-
-head(dd)
-```
-\
-
-Awesome. Now we calculate the difference between `roll` (the current roll) and `roll_lag` (the previous roll). As compared to the for loop, it makes it a bit easier to understand what is going on. We can either use base `R` to attach the new `diff` column ...
-```{r}
-dd$diff <- 
-  dd$roll - dd$roll_lag
-```
-\
-
-... or use the `tidyverse` and `magrittr` to achieve the very same thing:
-```{r}
-dd %<>%
-  mutate(diff = roll - roll_lag)
-```
-\
-
-Either way, `dd` now looks like this:
-```{r}
-head(dd)
-```
-
-## data analysis
-### die improvement as a function of magic
-
-Let's first get an overview. I would like to see a summary of the difference between successive rolls - depending on if magic has been used or not. I ask for a summary of all the rows in `diff` where no magic happened before (`magic_before == 0`) and for a separate summary of all the rows where the die was enchanted (`magic_before == 1`).
-```{r}
-summary(dd$diff[dd$magic_before == 0])
-summary(dd$diff[dd$magic_before == 1])
-```
-\
-
-Remember: That `NA` is produced because the first row of `diff` does not contain a value because there is no previous roll to compare it to.\
-But more importantly: Holy cow! Looks like there **is** an effect of magic! Look at the median of each group! Not very intuitive when presented like that, isn't it? Let's rather visualise the data.
-
-#### prepare a dataframe for a plot
-I would like to create a bar plot comparing the difference with magic vs. without magic - along with some error bars representing the standard error. Now, there are several ways to achieve this. Base `R` itself does not have a function for the standard error. However, it has one for the standard deviation, which is part of the formula to calculate the standard error.\
-We want to prepare a `data.frame` that we can plot later. And we can produce the column containing the standard error like this:
-
-```{r}
-se <- 
-  tapply(dd$diff, dd$magic_before, sd, na.rm = TRUE)/
-  c(sqrt(length(dd$diff[dd$magic_before == 0])), 
-    sqrt(length(dd$diff[dd$magic_before == 1])))
-```
-\
-
-Okay, this looks a bit wild. We can understand what's going on by running each piece of code separately. First, `tapply` gives us the standard deviation `sd` of the column `diff` - separately for each group of `magic_before`. Here, the `sd` for "no magic" is about 2.12 and for "magic" it is about 1.83.\
-Note that we need to set `na.rm = TRUE` so `R` will ignore the missing value. Otherwise, we'll end up with `NA` as result.
-
-```{r}
-tapply(dd$diff, dd$magic_before, sd, na.rm = TRUE)
-```
-\
-
-We need to divide the standard deviation by the square root of the sample size. This is what the second part of the code does: It calculates the square root of the size of each group (magic or not). That is, right at the core of all the brackets in the first line, we select the rows containing the difference (`dd$diff`) for the rolls where no magic happened (`[dd$magic_before == 0]`). Then we wrap that in `length` to get the number of elements (i.e. the number of rolls where no magic happened before). And lastly, we calculate the `sqrt` of the whole thing. In that case, it's simply the square root of 141. We have much more rolls where no magic happened.
-
-```{r}
-c(sqrt(length(dd$diff[dd$magic_before == 0])), 
-  sqrt(length(dd$diff[dd$magic_before == 1])))
-```
-\
-
-In the whole thing you saw above, we divided the vector containing the `sd` by the vector containing the `sqrt` of the sample size. So, `se` now looks like this:
-
-```{r}
-se
-```
-\
-
-Right. What does the `data.frame` we want to plot need? One column, `magic`, containing the condition (with or without - I used the spaces as a quick and dirty solution to have more space between the legend icons and the legend text in the plot). A second one, `diff`, containing the mean difference for each group - again, we use `tapply` to calculate that. Don't forget `na.rm`! And then, of course, a column containing the standard error - `se` which gets assigned the values of `se` that we calculated before. I wrapped the whole thing in parentheses so the outcome is printed even though it usually isn't when assigning something to a variable.
-```{r}
-(plot_data <- 
-  data.frame(magic = c(" without magic", " with magic"),
-             diff = tapply(dd$diff, dd$magic_before, mean, na.rm = TRUE),
-             se = se))
-```
-
-#### plot it
-Cool. After all this work, let's finally reward ourselves with a plot!
-```{r}
-ggplot(plot_data, aes(y = diff, x = magic, fill = magic)) +
-  geom_col(colour = "black", alpha = .6) +
-  scale_fill_manual(values = c("#9e0000", "#2d2d2d")) +
-  geom_errorbar(aes(ymin = diff - se, ymax = diff + se), width = .1) + 
-  labs(title= "mean difference between successive rolls", y = "difference") +
-  theme(plot.title = element_text(size = 16, hjust = .5),
-        axis.title.y = element_text(size = 14), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 12), axis.text.x = element_blank(),
+# Theme für die Plots
+julis_theme <- 
+  theme(panel.background = element_blank(),
+        panel.grid = element_blank(),
+        axis.line = element_line(colour = "black"),
+        axis.title.x = element_blank(),
         axis.ticks.x = element_blank(),
-        legend.text = element_text(size = 12), legend.title = element_blank())
+        legend.position = "none",
+        plot.title = element_text(size = 14, face = "plain", hjust = .5),
+        axis.text = element_text(size = 12),
+        strip.text = element_text(size = 12))
+
+## Wuerfel-Daten laden
+ww <- 
+  read.csv("enchanted_die.csv", sep = ";")
 ```
-\
 
-Again, this looks a bit wild because I customised so many things about this plot. `ggplot2` can be quite tempting by providing so many options. In general, I created a plot with `ggplot` using `plot_data` as data source. I picked `diff` to be shown on the y-axis and `magic` on the x-axis. That would have been enough, but I also wanted to have different colours for each group, so I picket `fill = magic`.\
-I wanted a bar plot, so I used `geom_col` for that (by intuition, you might want to use `geom_bar`, but then you need to add `stat = "identity"` as per default, `geom_bar` will want to use the count of each category on the y-axis). For the bars, I want a black outline and I want them to be slightly transparent (`alpha = .6`). Because I also want to manually pick the colours of the two bars, I specify them with `scale_fill_manual`.\
-We also wanted to add standard errors. I can do that with `geom_errorbar`. For each bar, the minimum of the errorbar should be the mean (i.e. the height of the bar) minus the standard error. While the maximum of the error bar is the mean plus the standard error. I also pick a width of the vertical lines at the end of the bars. Next, `labs` adds some labels: a title for the plot and one for the y-axis (because otherwise, it just would be called `diff`). In `theme`, I get rid of the x-axis title because it is pretty redundant given the legend and the x-axis title.\
-The rest is mainly resizing all the text because per default, it would be ridiculously small in thos Notebook.
-
-#### is there a tidy way?
-That was a bit of a struggle. However, `ggplot2` is a native of the `tidyverse`, so we should look at a tidy way to create this graph. A really convenient thing is that `ggplot2`, in fact, comes with a function for the standard error. And for the mean, by the way. No need to manually create a `data.frame` before - but this was the first way I learned it and I think it makes you think a bit more about what you actually want to plot.
+Kurze Inspektion der Daten: Es gibt eine Spalte namens `roll`, in der festgehalten wird, welche Zahl gewürfelt wurde.
+Und dann eine Spalte `magic_before`, die kodiert, ob vor dem jeweiligen Wurf "Magie stattgefunden hat".
+Eine 1 bedeutet, dass vor dem Wurf gezaubert wurde, eine 0 bedeutet, das nicht gezaubert wurde.
 
 ```{r}
-dd %>% 
-  na.omit() %>% 
-  ggplot(aes(y = diff, x = magic_before, fill = factor(magic_before))) +
-  stat_summary(fun.y = mean, geom = "col", 
-               colour = "black", alpha = .6) +
-  stat_summary(fun.data = mean_se, geom = "errorbar", 
-               width = .1) +
-  scale_fill_manual(values = c("#2d2d2d", "#9e0000"), 
-                    labels = c(" without magic", " with magic")) +
-  labs(title= "mean difference between successive rolls", y = "difference") +
-  theme(plot.title = element_text(size = 16, hjust = .5),
-        axis.title.y = element_text(size = 14), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 12), axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        legend.text = element_text(size = 12), legend.title = element_blank())
+head(ww, 10) %>% 
+  kable() %>% 
+  kable_styling("striped")
 ```
-\
 
-Again, maybe a bit wild, but slightly more concise. The basic structure, however, is the same. And all the customising stuff that I have added. The bars are now ordered the other way around, but let's ignore that.\
-The first difference is that now, I pass `dd` to `ggplot` using a pipe (`%>%`). I do not need to do that - I could have included `dd` as an argument within `ggplot`. But that way, I can get rid of the `NA`s along the way using `na.omit`. As we want to calculate the mean later, `R` would complain about those.\
-Because we now use `dd` directly, we provide its variable names - instead of the ones of the plot `data.fame` we used before. So for example, it's now `x = magic_before`. For the fill, we need to convert `magic_before` into a factor first (we could have done that before because that's what it truly is anyway).\
-Now it gets funny. `geom`s and `stat`s in `ggplot2` are interchangable and correspond to each other. You can provide a stat argument in a `geom` and a geom argument in a `stat`. Every `geom` has a default `stat` to go with - and the other way around. But we can take advantage of the fact that we can also use the `stat`s and `geom`s we want. So, `stat_summary` allows us to specify some summary functions for our data. We want the mean of the y-value (`diff`) for or bars (and we pick those with `geom = col`). In a second `stat_summary`, we use `mean_se` to calculate the standard error directly. No more tedious work like before!\
-Bottom line: `stat_summary` with `geom = col` replaces the previous `geom_col`. `stat_summary` with `geom = errorbar` replaces the previous `geom_errorbar`. Oh, and a minor thing: I also needed to provide the legend labels manually. Taken from the data, it would have been 0 and 1. Again, I could have prevented that by converting the whole column to a factor beforehand.\
-
-
-**To be inserted:** data analysis, more visualisation and regression to the mean
-
-### randomly generated die rolls
-Everything I just showed you might still just have happened because I used real die rolls. After all, the die **could** have been rigged. Or I **could** possess some magical talents. I can show you, however, that all of the above still holds when we use a completely random data set.\
-We generate some random die rolls and just assume that enchantment took place after specific numers (e.g. 1 and 2, like in our real world example). That means, we include a hypothetical `magic_before` column like in the real world example, even though no magic has ever occured. Yet, we still find an effect of magic if we assume the same rules as we did in the real world example.\
-That is, when we enchant the die after rolling low numbers, we will get an "improvement" via magic. If we enchant it after rolling high numbers, we will see the die getting "worse" - much like in a curse. You can toy around with the effect by using this function I created. It will generate a set of random die rolls with enchantment.\
-Most importantly, it is a really flexible function: You can **specify which numbers can possibly be rolled**, so our example does not have to be limited to a six-sided die. You can very well simulate a coin flip by e.g. providing 1 and 2 as possible outcomes.\
-And of course, you can also **specify which numbers you want to enchant**. The only limitation is that these numbers are included in the set of possible outcomes, obviously. Enchanting after a 3 or a 2 have been rolled will work for an ordinary six-sided die, but not for a coin flip (except when you have labelled the coin outcomes with 3 and 4). Accordingly, trying to enchant after a 42 for a die with numbers from 1 - 12 will give you an error message.\
-Try it out - you will receive an enchanting message when generating a dataset has been successful!
-
-Here is the quick, uncommented code for the function - I will explain it step by step below if you want to know more.
-
-### function for enchanted die rolls
-result: `data.frame` with two columns - output silent in order to prevent huge `data.frame` from being printed to the console
-
-| column         | description                                                                                                                |
-| :------------- | :------------------------------------------------------------------------------------------------------------------------- |
-| `rolls`        | die roll outcomes randomly sampled from numbers specified in `die_outcomes`                                                |
-| `magic_before` | has the die been enchanted in the previous roll? die is enchanted after rolling the number(s) specified in `magic_numbers` |
-Table: Description of the outcome of the `enchant.die` function.
-
-| argument        | description                                                                                                                                                                                                               |
-| :-------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `nrolls`        | number of rolls                                                                                                                                                                                                           |
-| `magic_numbers` | specify die outcomes after which you want to enchant your die; can be either a single number or a vector of several ones; default = c(1, 2) as in the real world example                                                  |
-| `die_outcomes`  | specify (a vector of) numbers from which die outcomes are sampled; uniform when each outcome is included only once - to weigh outcomes differently, include the same outcome multiple times; default: classical die (1:6) |
-Table: Arguments of the `enchant.die` function.
+Wird der Wurf nach der Intervention besser?
+Das finden wir heraus, indem wir die Differenz zum vorherigen Wurf berechnen.
+Für den ersten Wurf fügen wir einen fehlenden Wert ein, denn da es keinen Wurf vor dem ersten Wurf gibt, gibt es auch keine Differenz.
 
 ```{r}
-enchant.die <- function(nrolls, magic_numbers = c(1, 2), die_outcomes = 1:6) {
+ww$diff <- c(NA, diff(ww$roll))
+head(ww, 10) %>% 
+  kable() %>% 
+  kable_styling("striped")
+```
+
+## Ergebnisse 
+
+Ein kurzer Überblick, wie die mittlere Differenz für Würfe mit vs. ohne Magie aussieht:
+
+```{r}
+by(ww$diff, ww$magic_before, summary)
+```
+Bereits auf den ersten Blick sieht es so aus, als würde sich der Würfel verbessern, wenn vorher gezaubert wurde - und zwar im Mittel um 2.119 Punkte.
+Dagegen verschlechtert er sich sogar, wenn man vorher nicht zaubert!
+Die Punktzahl nimmt dann im Schnitt um 0.9071 Punkte ab.
+Um es mal grafisch darzustellen: Die Punkte sind einzelne Differenzen von Wurf zu Wurf, also z.B. könnte ein einzelner Punkt einen Wurf repräsentieren, bei dem die Differenz zum vorherigen Wurf 2 beträgt und bei dem zuvor gezaubert wurde.
+Das dicke Viereck in der Mitte ist der Mittelwert, und die horizontale Linie liegt bei 0.
+Immer, wenn ein Punkt auf dieser Linie liegt, hat der Würfel sich also weder "verbessert" noch verschlechtert.
+
+```{r warning = FALSE}
+ww %>% 
+  mutate(magic_before = ifelse(magic_before == 0, "nicht gezaubert", "gezaubert")) %>% 
+  ggplot(aes(x = factor(magic_before), y = diff, colour = factor(magic_before),
+             fill = factor(magic_before))) +
+  geom_point(position = position_jitter(width = .2, height = 0), alpha = .7, size = 3) +
+  stat_summary(size = 2, fun = "mean", shape = 22, colour = "black") +
+  geom_hline(yintercept = 0) +
+  labs(y = "Differenz", x = "vorher gezaubert") +
+  scale_y_continuous(breaks = seq(-5, 5, 1)) +
+  julis_theme
+```
+
+Wir können das natürlich auch statistisch auswerten: Wenn wir mit einem t-Test vergleichen, ob der Würfel mit Magie statistisch signifikant besser abschneidet als ohne Magie, dann lautet die klare Antwort: Ja! 
+
+```{r}
+# t-Test zum Vergleich der Differenz zum nächsten Wurf mit oder ohne Magie
+(wuerfel_ttest <- t.test(ww$diff ~ ww$magic_before))
+
+# Effektstaerke
+(wuerfel_effsize <- cohen.d(ww$diff ~ ww$magic_before))
+```
+
+Der Würfel ist ganz klar besser, wenn vorher gezaubert wurde, `r print_ttest(wuerfel_ttest, wuerfel_effsize)`.
+Und die Effektgröße ist riesig!
+Die standardisierte Effektgröße $d$ nutzen wir, um den Unterschied zwischen zwei Gruppen (hier: mit vs. ohne Magie) relativ zur Streuung der Daten auszudrücken.
+Man kann sich vorstellen, dass z.B. ein Unterschied von 1 bei einem Würfel, der Zahlen zwischen 1 und 20 würfelt (es ist ein D&D-Würfel), nicht so krass ist wie ein Unterschied von 1 bei einem Würfel, der Zahlen von 1 bis 6 würfelt.
+Es ist schwierig, ein intuitives Gefühl für Effektgrößen zu geben, wenn man noch nie davon gehört hat, aber man kann es in etwa so ausdrücken: ForscherInnen in der Psychologie und den Neurowissenschaften würden bei so einer Effektgröße hinten über fallen.
+
+## Was erklärt das Ergebnis?
+
+Die meisten haben sich vermutlich schon gedacht, dass das Ergebnis nicht durch Magie erklärt werden kann.
+Aber ist mein Würfel womöglich gezinkt?
+Sieht nicht so aus: Die Würfe sind ziemlich gleichverteilt.
+Wer findet, dass das nicht gleichmäßig genug aussieht, der kann anhand der zufällig computer-generierten Würfeldaten mal vergleichen, wie Zufall üblicherweise "aussieht".
+
+```{r}
+ww %>% 
+  ggplot(aes(x = roll)) + 
+  geom_bar(col = "black", alpha = .6) + 
+  scale_x_continuous(breaks = seq(1, 6, 1)) +
+  labs(title = "Wurf-Verteilung", x = "Augenzahl", y = "Anzahl") +
+  julis_theme
+```
+
+Aber: Kommen die Zahlen denn jeweils mit oder ohne Magie gleich häufig vor?
+Hier sieht man, dass die Augenzahlen mit vs. ohne Magie wieder relativ gleichmäßig verteilt sind, aber noch etwas anderes fällt auf: Es gibt viel mehr Würfe, in denen vorher nicht gezaubert wurde.
+
+```{r}
+ww %>% 
+  mutate(magic_before = ifelse(magic_before == 0, "nicht gezaubert", "gezaubert")) %>% 
+  ggplot(aes(x = roll, fill = magic_before)) + 
+  geom_bar(col = "black", alpha = .6) + 
+  scale_x_continuous(breaks = seq(1, 6, 1)) +
+  labs(title = "Wurf-Verteilung", x = "Augenzahl", y = "Anzahl") +
+  facet_wrap(~magic_before) +
+  julis_theme
+```
+
+Und genau da liegt der Schlüssel.
+Zumindest teilweise.
+Der arme Würfel hat nämlich keine "Wahl".
+Ich zaubere immer dann, wenn der Würfel zuvor eine 1 oder eine 2 gezeigt hat.
+Nach einer 1 *kann* der Würfel nur besser werden (zumindest nicht schlechter), denn es folgt danach entweder eine 1 - oder eine höhere Zahl.
+Nach einer 2 gibt es nur eine von 6 Zahlen, die eine Verschlechterung bedeutet: Nämlich dann, wenn auf den Wurf eine 1 folgt.
+Wenn ich dagegen eine 6 würfele, dann kann der Würfel in den darauffolgenden Würfen nur schlechter werden - oder aber gleich bleiben.
+Dasselbe Problem besteht etwas abgeschwächter, wenn ich eine 5 oder eine 4 würfele.
+Bei einer 3 wird der Würfel im Mittel gleich häufig besser oder schlechter.
+Nach all diesen Zahlen zaubere ich aber nicht - und das bedeutet, dass der Würfel insgesamt häufiger schlechter wird, wenn ich nicht gezaubert habe.
+
+## Regression zur Mitte
+
+Das liegt aber nicht daran, *dass* ich gezaubert habe, sondern *wann* ich gzeaubert habe.
+Das Phänomen ist als Regression zur Mitte bekannt: Ergebnisse werden sozusagen "zur Mitte hingezogen", das heißt, nach sehr guten Leistungen folgt meistens eine schlechtere und umgekehrt.
+Das Phänomen kennen wir aus dem Sport oder auch aus dem Alltag, wenn wir sagen "Schlimmer kann's ja nicht mehr werden".
+Wir haben also im Alltag ein ganz intuitives Verständnis für die Regression zur Mitte, aber leider nicht immer.
+Sportler werden zur Schnecke gemacht, wenn sie ihre Glanzleistung aus dem vorherigen Wettkampft nicht wiederholen können.
+Wir wundern uns, dass die Fortsetzung eines Films nicht an den ersten Teil anknüpfen kann.
+Oder wir nehmen genau dann Globuli, wenn es uns gerade am dreckigsten geht - und machen dann die Globuli dafür verwantwortlich, dass es besser geworden ist.
+
+## Computergenerierte Daten
+
+Um noch mal zu veranschaulichen, Wie beliebig das Phänomen ist, hier eine Funktion, die "verzauberte" Würfelwürfe generiert.
+Die Funktion generiert eine Anzahl von zufälligen Würfen (angegeben über `nrolls`) und "verzaubert" bestimmte Augenzahlen.
+Das heißt, über `magic_numbers` geben wir an, nach welchen Augenzahlen gezaubert werden soll.
+Für die D&Dler unter euch ist es über `die_outcomes` auch möglich anzugeben, welche Augenzahlen möglich sein können, also z.B. 1-20 anstatt 1-6.
+
+```{r}
+enchant_die <- function(nrolls, magic_numbers = c(1, 2), die_outcomes = 1:6) {
   
-  magic_message <- c("Mischief managed.", "Magical!", "Alea iacta est.", "You're a wizard!",
-                     "Magic is in the air.", "Did you just feel that?", "Enchanting!",
-                     "Thank you for choosing Enchanted Dies!", "I'm slightly bewichted.",
-                     "With great power comes great responsibilty.", "That's a lot of die rolls",
-                     "6 is my lucky number!", "Charming!", "I'm under your spell!")
-  
+  # Wenn mindestens eine "verzauberte Zahl" nicht in den möglichen Würfelzahlen vorkommt,
+  # gib eine Fehlermeldung aus.
   if (sum(!magic_numbers %in% die_outcomes) > 0) {
-    stop("Woah there! You want to enchant at least one die outcome that your die cannot possibly roll! Per default, the die rolls 1:6. Specify any other outcomes via the argument die_outcomes.")
+    stop("Woopsie! Du willst mindestens eine Augenzahl verzaubern, die nicht in den möglichen Augenzahlen des Würfels vorkommt!")
   }
   
-  dd <- data.frame(rolls = sample(die_outcomes, nrolls, replace = TRUE), 
-                   magic_before = rep(2, nrolls))
+  dd <- data.frame(roll = sample(die_outcomes, nrolls, replace = TRUE), 
+                   magic_before = NA)
   
+  # Wenn die zuvor gewürfelte Zahl zu den "magic numbers" gehört, "verzaubere" sie.
+  # Im ersten Wurf hat vorher allerdings keine Magie stattgefunden (fehlender Wert)
+  dd$magic_before <- ifelse(lag(dd$roll) %in% magic_numbers, 1, 0)
+  
+  # Im ersten Wurf hat allerdings keine Magie stattgefunden.
   dd$magic_before[1] <- 0
   
-  for (i in 1:(nrolls - 1)) {
-    ifelse(dd$rolls[i] %in% magic_numbers == TRUE, 
-           dd$magic_before[i + 1] <- 1, dd$magic_before[i + 1] <- 0)
-  }
+  # Sende eine magische Nachricht, wenn die Funktion fertig ist.
+  magic_message <- c("Missetat begangen", "Magisch!", "Die Würfel sind gefallen", 
+                     "Du bist ein Zauberer, Harry!",
+                     "Magie liegt in der Luft!", "Huch, hast du das gefühlt?", "Bezaubernd!",
+                     "Danke für ihre Reise mit Enchanted Dies!", "Ich bin völlig verhext.",
+                     "Aus großer Kraft folgt große Verantwortung", "Das sind eine Menge Würfelwürfe.",
+                     "6 ist meine Glückszahl!")
   
   print(sample(magic_message, 1))
   
-  invisible(dd)
+  return(dd)
 }
+
 ```
 
-## Examples
-200 rolls with an ordinary, six-sided die. Enchantment: default - after rolling a 1 or 2.
+Wieso nicht mal 500 Würfe generieren, aber nur dann zaubern, wenn vorher eine 5 oder eine 6 geworfen wurden?
+
 ```{r}
-dd <- enchant.die(200)
-
-head(dd)
+ww <- enchant_die(500, magic_numbers = c(5, 6))
 ```
-\
 
-**To be included:** Explain function. (And maybe improve it.)
+Hier einmal fix die statistiken und die Plots, die wir auch zuvor für die echten Daten generiert haben.
+Wie wir sehen, ist nun plötzlich der Würfel ohne Zauberei besser - weil wir dieses Mal die hohen Zahlen verzaubert haben.
+Das ist ein bisschen, als würde man eine Kopfschmerztablette geben, wenn es einem gerade blendend geht.
+Es ist nicht möglich, dass die Kopfschmerzen danach besser werden - man hat ja keine - aber es kann schon sein, dass man danach zufällig Kopfschmerzen bekommt.
+
+```{r echo = FALSE}
+ww$diff <- c(NA, diff(ww$roll))
+by(ww$diff, ww$magic_before, summary)
+```
+
+
+```{r warning = FALSE, echo = FALSE}
+ww %>% 
+  mutate(magic_before = ifelse(magic_before == 0, "nicht gezaubert", "gezaubert")) %>% 
+  ggplot(aes(x = factor(magic_before), y = diff, colour = factor(magic_before),
+             fill = factor(magic_before))) +
+  geom_point(position = position_jitter(width = .2, height = 0), alpha = .7, size = 3) +
+  stat_summary(size = 2, fun = "mean", shape = 22, colour = "black") +
+  geom_hline(yintercept = 0) +
+  labs(y = "Differenz", x = "vorher gezaubert") +
+  scale_y_continuous(breaks = seq(-5, 5, 1)) +
+  julis_theme
+```
+
+```{r echo = FALSE}
+# t-Test zum Vergleich der Differenz zum nächsten Wurf mit oder ohne Magie
+(wuerfel_ttest <- t.test(ww$diff ~ ww$magic_before))
+
+# Effektstaerke
+(wuerfel_effsize <- cohen.d(ww$diff ~ ww$magic_before))
+```
+
+```{r echo = FALSE}
+ww %>% 
+  ggplot(aes(x = roll)) + 
+  geom_bar(col = "black", alpha = .6) + 
+  scale_x_continuous(breaks = seq(1, 6, 1)) +
+  labs(title = "Wurf-Verteilung", x = "Augenzahl", y = "Anzahl") +
+  julis_theme
+```
+
+```{r echo = FALSE}
+ww %>% 
+  mutate(magic_before = ifelse(magic_before == 0, "nicht gezaubert", "gezaubert")) %>% 
+  ggplot(aes(x = roll, fill = magic_before)) + 
+  geom_bar(col = "black", alpha = .6) + 
+  scale_x_continuous(breaks = seq(1, 6, 1)) +
+  labs(title = "Wurf-Verteilung", x = "Augenzahl", y = "Anzahl") +
+  facet_wrap(~magic_before) +
+  julis_theme
+```
