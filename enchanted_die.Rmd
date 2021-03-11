@@ -20,6 +20,7 @@ Und was, wenn gerade deine magischen Fähigkeiten ans Licht gekommen wären, und
 ## Worum es hier geht
 
 Ich werde mit meinen "magischen Kräfte" einen Würfel verzaubern, um seine "Performance" zu verbessern.
+Ich kann nämlich Würfel magisch beeinflussen - legt euch besser nicht mit mir bei Mensch-ärgere-dich-nicht an!
 Dabei zeige ich euch den `R`-Code, den ich verwende, um meine magischen Würfeldaten zu analysieren - und um bei Bedarf welche zu generieren.
 Spoiler-Alarm: Letztendlich werde ich euch zeigen, dass Magie in Wahrheit doch nicht funktioniert.
 Sorry.
